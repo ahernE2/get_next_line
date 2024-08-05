@@ -6,7 +6,7 @@
 /*   By: alejhern <alejhern@student.42barcelona.co  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/16 20:21:14 by alejhern          #+#    #+#             */
-/*   Updated: 2024/08/03 16:49:47 by alejhern         ###   ########.fr       */
+/*   Updated: 2024/08/05 22:53:03 by alejhern         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <stdint.h>
 #ifndef BUFFER_SIZE
 # define BUFFER_SIZE 1
 #endif
@@ -54,8 +55,30 @@ char	*ft_strdup(const char *str)
 	if (!dup)
 		return (NULL);
 	ft_memcpy(dup, str, size);
-	dup[size] = '\0';
 	return (dup);
+}
+
+void    *ft_calloc(size_t nmemb, size_t size)
+{
+        size_t  t_size;
+        void    *arr;
+	unsigned char	*arr_ptr;
+	size_t	index;
+
+        if (nmemb > 0 && size > 0 && nmemb > SIZE_MAX / size)
+                return (NULL);
+        t_size = nmemb * size;
+        arr = malloc(t_size);
+        if (!arr)
+                return (NULL);
+	arr_ptr = (unsigned char *) arr; 
+        index = 0;
+	while (index < t_size)
+	{
+		*arr_ptr++ = '\0';
+		index++;
+	}
+        return (arr);
 }
 
 void	*ft_realloc(void *ptr, size_t new_size)
@@ -69,7 +92,7 @@ void	*ft_realloc(void *ptr, size_t new_size)
 		free(ptr);
 		return (NULL);
 	}
-	new_ptr = malloc(new_size);
+	new_ptr = ft_calloc(new_size, sizeof(char));
 	if (!new_ptr)
 		return (NULL);
 	if (ptr)
@@ -101,69 +124,72 @@ char	*ft_strchr(const char *str, int c)
 char    *ft_strjoin(char *s1, char *s2)
 {
         size_t  t_size;
-	size_t	index;
-        char    *arr;
+	size_t	s1_size;
 
         if (!s1 && !s2)
                 return (NULL);
         if (!s1)
                 return (ft_strdup(s2));
         if (!s2)
-                return (ft_strdup(s1));
-        t_size = ft_strlen(s1) + ft_strlen(s2) + 1;
-        arr = (char *)malloc(t_size * sizeof(char));
-        if (!arr)
+                return (s1);
+        s1_size = ft_strlen(s1);
+        t_size = s1_size + ft_strlen(s2) + 1;
+        s1 = (char *)ft_realloc(s1, t_size * sizeof(char));
+        if (!s1)
                 return (NULL);
-	index = 0;
-        while (*s1)
-		arr[index++] = *s1++;
 	while (*s2)
-		arr[index++] = *s2++;
-	arr[index] = '\0';
-        return (arr);
+		s1[s1_size++] = *s2++;
+        return (s1);
 }
 
-char	**buffer_check_nl(char **buffer, unsigned int buffer_ch)
-{
-	buffer[2] = ft_strchr(buffer[buffer_ch], '\n');
+char **buffer_check_nl(char **buffer, unsigned int buffer_ch) {
+    buffer[3] = ft_strchr(buffer[buffer_ch], '\n');
+    if (buffer[3]) 
+    {
+        *buffer[3] = '\0';
+        buffer[0] = ft_strjoin(buffer[0], buffer[buffer_ch]);
+	buffer[0] = ft_strjoin(buffer[0], "\n");
+	buffer[3] = ft_strdup(buffer[3] + 1);
 	if (buffer[2])
-	{
-		*(buffer[2] + 1) = '\0';
-		buffer[2] = NULL;
-		buffer[2] = ft_strdup(buffer[buffer_ch] + ft_strlen(buffer[buffer_ch]) + 1);
-	}
-	return (buffer);
+		free(buffer[2]);
+	buffer[2] = ft_strdup(buffer[3]);
+	free(buffer[3]);
+    } else {
+        buffer[0] = ft_strjoin(buffer[0], buffer[buffer_ch]);
+        free(buffer[2]);
+        buffer[2] = NULL;
+    }
+    return buffer;
 }
 
-char	**get_new_buffer(int fd, char **buffer)
-{
-	size_t	bytes_read;
-
-	if (buffer[2])
+char **get_new_buffer(int fd, char **buffer) {
+    if (buffer[2]) {
+        buffer_check_nl(buffer, 2);
+        if (buffer[2])
+            return buffer;
+    }
+    if (buffer[1])
+    	free(buffer[1]);
+    buffer[1] = (char *)ft_calloc((BUFFER_SIZE + 1), sizeof(char));
+    if (!buffer[1])
+	    return (NULL);
+    while (1) {
+	if (read(fd, buffer[1], BUFFER_SIZE) <= 0)
 	{
-		buffer[0] = ft_strjoin(buffer[0], buffer[2]);
-		buffer_check_nl(buffer, 0);
-		if (buffer[2])
-			return (buffer);
+		free(buffer[0]);
+		buffer[0] = NULL;
+		break;
 	}
-	buffer[1] = (char *)malloc((BUFFER_SIZE + 1) * sizeof(char));
-	if (!buffer[1])
-		return (NULL);
-	bytes_read = read(fd, buffer[1], BUFFER_SIZE);
-	if (bytes_read > 0)
-	{
-        	buffer[1][bytes_read] = '\0';
-			buffer_check_nl(buffer, 1);
-			buffer[0] = ft_strjoin(buffer[0], buffer[1]);
-			if (!buffer[2])
-				get_new_buffer(fd, buffer);
-	}
-	return (buffer);
+        buffer_check_nl(buffer, 1);
+        if (buffer[2])
+		break;
+    }
+    return buffer;
 }
 
 char	*get_next_line(int fd)
 {
-	static char	*buffer[3];
+	static char	*buffer[4];
 
 	if (fd < 0 || BUFFER_SIZE <= 0)
 		return (NULL);
@@ -186,8 +212,6 @@ int	main(void)
 	fd = open("test.txt", O_RDWR);
 	if (fd == -1)
 		return (1);
-	// line = get_next_line(fd);
-	// printf("%s", line);
 	while ((line = get_next_line(fd)) != NULL)
         	printf("%s", line);
 	free(line);
