@@ -6,7 +6,7 @@
 /*   By: alejhern <alejhern@student.42barcelona.co  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/16 20:21:14 by alejhern          #+#    #+#             */
-/*   Updated: 2024/08/07 19:22:27 by alejhern         ###   ########.fr       */
+/*   Updated: 2024/08/07 20:23:37 by alejhern         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -107,4 +107,21 @@ static char	**get_new_buffer(int fd, char **buffer)
 			break ;
 	}
 	return (buffer);
+}
+
+char	*get_next_line(int fd)
+{
+	static char	*buffer[1024][4];
+
+	if (fd < 0 || fd > 1024 || BUFFER_SIZE <= 0)
+		return (NULL);
+	if (buffer[fd][0])
+	{
+		free(buffer[fd][0]);
+		buffer[fd][0] = NULL;
+	}
+	get_new_buffer(fd, buffer[fd]);
+	free(buffer[fd][1]);
+	buffer[fd][1] = NULL;
+	return (buffer[fd][0]);
 }
