@@ -6,7 +6,7 @@
 /*   By: alejhern <alejhern@student.42barcelona.co  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/07 19:06:49 by alejhern          #+#    #+#             */
-/*   Updated: 2024/08/07 19:08:47 by alejhern         ###   ########.fr       */
+/*   Updated: 2024/08/08 20:32:49 by alejhern         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -116,10 +116,7 @@ char	*get_next_line(int fd)
 	if (fd < 0 || fd > 1024 || BUFFER_SIZE <= 0)
 		return (NULL);
 	if (buffer[fd][0])
-	{
-		free(buffer[fd][0]);
 		buffer[fd][0] = NULL;
-	}
 	get_new_buffer(fd, buffer[fd]);
 	free(buffer[fd][1]);
 	buffer[fd][1] = NULL;
