@@ -6,7 +6,7 @@
 /*   By: alejhern <alejhern@student.42barcelona.co  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/16 20:21:14 by alejhern          #+#    #+#             */
-/*   Updated: 2024/08/08 23:20:27 by alejhern         ###   ########.fr       */
+/*   Updated: 2024/08/09 02:31:55 by alejhern         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,8 +45,11 @@ void	*ft_realloc(void *ptr, size_t new_size)
 		return (NULL);
 	}
 	new_ptr = ft_calloc(new_size, sizeof(char));
-	if (!new_ptr)
+	if (!new_ptr || !ptr)
+	{
+		free(ptr);
 		return (NULL);
+	}
 	if (ptr)
 	{
 		if (ft_strlen(ptr) + 1 < new_size)
@@ -67,10 +70,10 @@ static char	**buffer_check_nl(char **buffer, unsigned int buffer_ch)
 		buffer[0] = ft_strjoin(buffer[0], buffer[buffer_ch]);
 		buffer[0] = ft_strjoin(buffer[0], "\n");
 		buffer[3] = ft_strdup(buffer[3] + 1);
-		if (buffer[2])
-			free(buffer[2]);
+		free(buffer[2]);
 		buffer[2] = ft_strdup(buffer[3]);
 		free(buffer[3]);
+		buffer[3] = NULL;
 	}
 	else
 	{
@@ -89,23 +92,23 @@ static char	**get_new_buffer(int fd, char **buffer)
 		if (buffer[2])
 			return (buffer);
 	}
-	if (buffer[1])
-		free(buffer[1]);
 	buffer[1] = (char *)ft_calloc((BUFFER_SIZE + 1), sizeof(char));
 	if (!buffer[1])
-		return (NULL);
+	{
+		free(buffer[0]);
+		buffer[0] = NULL;
+		return (buffer);
+	}
 	while (1)
 	{
 		if (read(fd, buffer[1], BUFFER_SIZE) <= 0)
-		{
-			free(buffer[1]);
-			buffer[1] = NULL;
 			break ;
-		}
 		buffer_check_nl(buffer, 1);
 		if (buffer[2])
 			break ;
 	}
+	free(buffer[1]);
+	buffer[1] = NULL;
 	return (buffer);
 }
 
@@ -118,7 +121,10 @@ char	*get_next_line(int fd)
 	if (buffer[fd][0])
 		buffer[fd][0] = NULL;
 	get_new_buffer(fd, buffer[fd]);
-	free(buffer[fd][1]);
-	buffer[fd][1] = NULL;
+	if (!buffer[fd][0])
+	{
+		free(buffer[fd][2]);
+		buffer[fd][2] = NULL;
+	}
 	return (buffer[fd][0]);
 }

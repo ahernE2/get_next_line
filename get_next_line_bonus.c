@@ -6,7 +6,7 @@
 /*   By: alejhern <alejhern@student.42barcelona.co  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/07 19:06:49 by alejhern          #+#    #+#             */
-/*   Updated: 2024/08/08 20:32:49 by alejhern         ###   ########.fr       */
+/*   Updated: 2024/08/08 23:30:43 by alejhern         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -98,8 +98,8 @@ static char	**get_new_buffer(int fd, char **buffer)
 	{
 		if (read(fd, buffer[1], BUFFER_SIZE) <= 0)
 		{
-			free(buffer[0]);
-			buffer[0] = NULL;
+			free(buffer[1]);
+			buffer[1] = NULL;
 			break ;
 		}
 		buffer_check_nl(buffer, 1);
