@@ -6,7 +6,7 @@
 /*   By: alejhern <alejhern@student.42barcelona.co  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/16 20:21:14 by alejhern          #+#    #+#             */
-/*   Updated: 2024/08/09 02:31:55 by alejhern         ###   ########.fr       */
+/*   Updated: 2024/08/09 11:12:45 by alejhern         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,19 +45,14 @@ void	*ft_realloc(void *ptr, size_t new_size)
 		return (NULL);
 	}
 	new_ptr = ft_calloc(new_size, sizeof(char));
-	if (!new_ptr || !ptr)
-	{
-		free(ptr);
-		return (NULL);
-	}
-	if (ptr)
+	if (ptr && new_ptr)
 	{
 		if (ft_strlen(ptr) + 1 < new_size)
 			ft_memcpy(new_ptr, ptr, ft_strlen(ptr) + 1);
 		else
 			ft_memcpy(new_ptr, ptr, new_size);
-		free(ptr);
 	}
+	free(ptr);
 	return (new_ptr);
 }
 
@@ -86,29 +81,30 @@ static char	**buffer_check_nl(char **buffer, unsigned int buffer_ch)
 
 static char	**get_new_buffer(int fd, char **buffer)
 {
+	int	bytes_read;
+
 	if (buffer[2])
 	{
 		buffer_check_nl(buffer, 2);
 		if (buffer[2])
 			return (buffer);
 	}
-	buffer[1] = (char *)ft_calloc((BUFFER_SIZE + 1), sizeof(char));
-	if (!buffer[1])
-	{
-		free(buffer[0]);
-		buffer[0] = NULL;
-		return (buffer);
-	}
 	while (1)
 	{
-		if (read(fd, buffer[1], BUFFER_SIZE) <= 0)
+		bytes_read = read(fd, buffer[1], BUFFER_SIZE);
+		if (bytes_read < 0)
+		{
+			free(buffer[0]);
+			buffer[0] = NULL;
+			break ;
+		}
+		buffer[1][bytes_read] = '\0';
+		if (bytes_read == 0)
 			break ;
 		buffer_check_nl(buffer, 1);
 		if (buffer[2])
 			break ;
 	}
-	free(buffer[1]);
-	buffer[1] = NULL;
 	return (buffer);
 }
 
@@ -118,13 +114,21 @@ char	*get_next_line(int fd)
 
 	if (fd < 0 || fd > 1024 || BUFFER_SIZE <= 0)
 		return (NULL);
-	if (buffer[fd][0])
-		buffer[fd][0] = NULL;
+	buffer[fd][1] = (char *)ft_calloc((BUFFER_SIZE + 1), sizeof(char));
+	if (!buffer[fd][1])
+		return (NULL);
+	buffer[fd][0] = NULL;
 	get_new_buffer(fd, buffer[fd]);
+	if (buffer[fd][0] && buffer[fd][0][0] == '\0')
+	{
+		free(buffer[fd][0]);
+		buffer[fd][0] = NULL;
+	}
 	if (!buffer[fd][0])
 	{
 		free(buffer[fd][2]);
 		buffer[fd][2] = NULL;
 	}
+	free(buffer[fd][1]);
 	return (buffer[fd][0]);
 }
