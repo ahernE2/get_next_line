@@ -6,7 +6,7 @@
 /*   By: alejhern <alejhern@student.42barcelona.co  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/06 13:55:28 by alejhern          #+#    #+#             */
-/*   Updated: 2024/08/06 13:55:31 by alejhern         ###   ########.fr       */
+/*   Updated: 2024/09/17 09:53:07 by alejhern         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,8 +17,6 @@ size_t	ft_strlen(const char *str)
 	size_t	lenght;
 
 	lenght = 0;
-	if (!str)
-		return (lenght);
 	while (str[lenght])
 		lenght++;
 	return (lenght);
