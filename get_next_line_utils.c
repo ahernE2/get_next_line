@@ -22,15 +22,32 @@ size_t	ft_strlen(const char *str)
 	return (lenght);
 }
 
-void	*ft_memcpy(void *dest, const void *src, size_t n)
+void	*ft_memmove(void *dest, const void *src, size_t n)
 {
-	unsigned char	*s;
 	unsigned char	*d;
+	unsigned char	*s;
+	size_t			i;
 
-	s = (unsigned char *)src;
-	d = (unsigned char *)dest;
-	while (n--)
-		*d++ = *s++;
+	d = (unsigned char *) dest;
+	s = (unsigned char *) src;
+	if (s < d && s + n > d)
+	{
+		i = n;
+		while (i > 0)
+		{
+			d[i - 1] = s[i -1];
+			i--;
+		}
+	}
+	else
+	{
+		i = 0;
+		while (i < n)
+		{
+			d[i] = s[i];
+			i++;
+		}
+	}
 	return (dest);
 }
 
@@ -43,7 +60,7 @@ char	*ft_strdup(const char *str)
 	dup = (char *)malloc(size * sizeof(char));
 	if (!dup)
 		return (NULL);
-	ft_memcpy(dup, str, size);
+	ft_memmove(dup, str, size);
 	return (dup);
 }
 
@@ -60,7 +77,7 @@ char	*ft_strchr(const char *str, int c)
 	return (NULL);
 }
 
-char	*ft_strjoin(char *s1, char *s2)
+char	*ft_strjoin(char *s1, char *s2, int put_nl)
 {
 	size_t	t_size;
 	size_t	s1_size;
@@ -72,11 +89,13 @@ char	*ft_strjoin(char *s1, char *s2)
 	if (!s2)
 		return (s1);
 	s1_size = ft_strlen(s1);
-	t_size = s1_size + ft_strlen(s2) + 1;
+	t_size = s1_size + ft_strlen(s2) + 1 + put_nl;
 	s1 = (char *)ft_realloc(s1, t_size * sizeof(char));
 	if (!s1)
 		return (NULL);
 	while (*s2)
 		s1[s1_size++] = *s2++;
+	if (put_nl)
+		s1[s1_size++] = '\n';
 	return (s1);
 }
